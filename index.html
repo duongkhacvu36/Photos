@@ -6,7 +6,6 @@
 <title>Danh sách tệp</title>
 
 <style>
-/* 🌑 GIAO DIỆN TỐI */
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
@@ -15,24 +14,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
   min-height: 100vh;
   padding: 20px 10px;
 }
 
-/* 🧱 KHUNG CHÍNH */
 .container {
   width: 100%;
   max-width: 900px;
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-  box-sizing: border-box;
 }
 
-/* 🏷️ TIÊU ĐỀ */
 header {
   text-align: center;
   margin-bottom: 16px;
@@ -43,7 +33,6 @@ h1 {
   margin: 0;
 }
 
-/* 📂 BẢNG FILE */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -71,7 +60,6 @@ td {
   padding: 20px;
 }
 
-/* 🔘 NÚT HÀNH ĐỘNG */
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -110,6 +98,47 @@ td {
   opacity: 1;
   max-height: 1000px;
 }
+#previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+#previewHeader h3 {
+  color: #b388ff;
+  margin: 0;
+  font-weight: 600;
+}
+#previewToggle {
+  appearance: none;
+  width: 46px;
+  height: 24px;
+  background: #333;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  transition: 0.3s;
+}
+#previewToggle::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ccc;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+#previewToggle:checked {
+  background: #b388ff;
+}
+#previewToggle:checked::before {
+  left: 25px;
+  background: #111;
+}
+
 #previewContent {
   overflow: auto;
   max-height: 400px;
@@ -134,7 +163,6 @@ button:hover {
   background: #ce93d8;
 }
 
-/* 📱 RESPONSIVE */
 @media (max-width: 600px) {
   th, td {
     padding: 8px 6px;
@@ -149,4 +177,148 @@ button:hover {
 
 <body>
 <header>
-  <h1>📂 Danh sách tệp</h1
+  <h1>📂 Danh sách tệp</h1>
+</header>
+
+<main class="container">
+  <table>
+    <thead>
+      <tr>
+        <th>Tên</th><th>Kích thước</th><th>Loại</th><th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody id="filesBody">
+      <tr><td colspan="4" class="empty">Đang tải...</td></tr>
+    </tbody>
+  </table>
+
+  <div id="previewBox">
+    <div id="previewHeader">
+      <h3>👁️‍🗨️ <span style="color:#b388ff">Xem trước</span></h3>
+      <input type="checkbox" id="previewToggle" checked>
+    </div>
+    <div id="previewContent"></div>
+  </div>
+</main>
+
+<script>
+const filesBody = document.getElementById('filesBody');
+const branch = "main"; // giữ cố định
+
+// 🔍 Tự động nhận owner & repo theo URL GitHub
+function detectRepoInfo() {
+  const match = window.location.href.match(/github\.io\/([^/]+)\/([^/?#]+)/);
+  if (match) {
+    return { owner: match[1], repo: match[2] };
+  }
+  return { owner: "duongkhacvu36", repo: "Share" }; // fallback
+}
+const { owner, repo } = detectRepoInfo();
+
+async function apiList(path='') {
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`GitHub API lỗi ${r.status}`);
+  return r.json();
+}
+
+function rawUrl(path){
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+}
+
+function formatBytes(b){
+  if(!b) return '-';
+  const k=1024, s=['B','KB','MB','GB'];
+  const i=Math.floor(Math.log(b)/Math.log(k));
+  return (b/Math.pow(k,i)).toFixed(2)+' '+s[i];
+}
+
+function renderList(list) {
+  const rows = list.map(f=>{
+    if(f.type==='dir'){
+      return `<tr>
+        <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
+        <td>-</td><td>Thư mục</td><td></td>
+      </tr>`;
+    } else {
+      const url = rawUrl(f.path);
+      return `<tr>
+        <td>📄 ${f.name}</td>
+        <td>${formatBytes(f.size)}</td>
+        <td>${f.type}</td>
+        <td class="action-buttons">
+          <a href="${url}" download class="action-btn">Tải</a>
+          <a href="#" class="action-btn" onclick="previewFile('${url}','${f.name}')">Xem</a>
+        </td>
+      </tr>`;
+    }
+  });
+  filesBody.innerHTML = rows.join('');
+  document.querySelectorAll('.dir').forEach(a=>a.onclick=e=>{
+    e.preventDefault();
+    loadFiles(a.dataset.dir);
+  });
+}
+
+async function loadFiles(path='') {
+  filesBody.innerHTML='<tr><td colspan="4" class="empty">Đang tải...</td></tr>';
+  try {
+    const data = await apiList(path);
+    renderList(Array.isArray(data)?data:[data]);
+  } catch(e) {
+    filesBody.innerHTML=`<tr><td colspan="4" class="empty">Lỗi: ${e.message}</td></tr>`;
+  }
+}
+
+let currentPreview = { url: null, name: null };
+
+async function previewFile(url,name){
+  const box=document.getElementById('previewBox');
+  const content=document.getElementById('previewContent');
+  const toggle=document.getElementById('previewToggle');
+
+  if (box.classList.contains('show') && currentPreview.url===url) {
+    closePreview();
+    return;
+  }
+
+  currentPreview = { url, name };
+  box.classList.add('show');
+  toggle.checked = true;
+  content.innerHTML='<i>Đang tải...</i>';
+
+  const ext = name.toLowerCase();
+  try {
+    if(ext.endsWith('.jpg')||ext.endsWith('.jpeg')||ext.endsWith('.png')||ext.endsWith('.gif')){
+      content.innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;">`;
+    } else if(ext.endsWith('.pdf')){
+      content.innerHTML=`<iframe src="${url}" width="100%" height="400px" style="border:none;"></iframe>`;
+    } else if(ext.endsWith('.txt')||ext.endsWith('.md')||ext.endsWith('.html')){
+      const text=await (await fetch(url)).text();
+      content.innerHTML=`<pre>${text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
+    } else {
+      content.innerHTML=`<p>❌ Không hỗ trợ xem trước loại này.</p>`;
+    }
+  } catch(e){
+    content.innerHTML=`<p>Lỗi: ${e.message}</p>`;
+  }
+}
+
+function closePreview(){
+  const box=document.getElementById('previewBox');
+  const toggle=document.getElementById('previewToggle');
+  box.classList.remove('show');
+  toggle.checked = false;
+  currentPreview = { url: null, name: null };
+}
+
+document.getElementById('previewToggle').addEventListener('change', e=>{
+  const box=document.getElementById('previewBox');
+  if(e.target.checked) box.classList.add('show');
+  else closePreview();
+});
+
+loadFiles();
+</script>
+</body>
+</html>
