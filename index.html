@@ -6,7 +6,7 @@
 <title>Danh sách tệp</title>
 
 <style>
-/* 🌑 NỀN ĐEN GỌN GÀNG */
+/* 🌑 GIAO DIỆN NỀN ĐEN GỌN GÀNG */
 body {
   margin: 0;
   font-family: "Inter", sans-serif;
@@ -48,6 +48,7 @@ th, td {
   padding: 12px 10px;
   border-bottom: 1px solid #222;
   text-align: left;
+  vertical-align: middle;
 }
 th {
   background: #191919;
@@ -57,7 +58,7 @@ th {
 }
 td {
   color: #ddd;
-  vertical-align: middle;
+  word-break: break-word;
 }
 tr:last-child td {
   border-bottom: none;
@@ -85,13 +86,16 @@ tr:last-child td {
   color: #111;
 }
 
-/* 🖼️ KHUNG XEM (ẩn mặc định) */
+/* 🖼️ KHUNG XEM */
 #previewBox {
   display: none;
   margin-top: 16px;
   width: 100%;
 }
 #previewContent {
+  background: #222;
+  border-radius: 6px;
+  padding: 10px;
   overflow: auto;
   max-height: 70vh;
   color: #ddd;
@@ -99,6 +103,8 @@ tr:last-child td {
 #previewContent img {
   max-width: 100%;
   border-radius: 6px;
+  display: block;
+  margin: 0 auto;
 }
 
 /* 📱 RESPONSIVE */
@@ -144,13 +150,13 @@ const filesBody = document.getElementById('filesBody');
 const previewBox = document.getElementById('previewBox');
 const previewContent = document.getElementById('previewContent');
 
-/* 🔄 Lấy thông tin repo tự động */
+/* 🧠 TỰ NHẬN REPO HIỆN TẠI */
 const repoPath = window.location.pathname.split('/').filter(Boolean);
 const owner = repoPath[0];
 const repo = repoPath[1];
 const branch = "main";
 
-/* 📜 Gọi API GitHub */
+/* 📜 API GITHUB */
 async function apiList(path='') {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
   const r = await fetch(url);
@@ -158,12 +164,12 @@ async function apiList(path='') {
   return r.json();
 }
 
-/* 📦 URL tải file thô */
+/* 🔗 RAW URL */
 function rawUrl(path) {
   return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
 }
 
-/* 🔢 Định dạng dung lượng */
+/* 📏 Định dạng dung lượng */
 function formatBytes(b) {
   if(!b) return '-';
   const k=1024, s=['B','KB','MB','GB'];
@@ -199,7 +205,7 @@ function renderList(list) {
   });
 }
 
-/* 🚀 Tải danh sách file */
+/* 🚀 Tải danh sách */
 async function loadFiles(path='') {
   filesBody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#777;">Đang tải...</td></tr>';
   try {
@@ -210,7 +216,7 @@ async function loadFiles(path='') {
   }
 }
 
-/* 👁️‍🗨️ Bật/tắt xem trước */
+/* 👁️‍🗨️ Bật/Tắt Xem File */
 let currentPreview = null;
 async function togglePreview(url, name, btn) {
   if (currentPreview === url && previewBox.style.display === 'block') {
@@ -230,7 +236,7 @@ async function togglePreview(url, name, btn) {
       previewContent.innerHTML = `<iframe src="${url}" width="100%" height="600px" style="border:none;"></iframe>`;
     } else if (ext.endsWith('.html') || ext.endsWith('.txt') || ext.endsWith('.md')) {
       const text = await (await fetch(url)).text();
-      previewContent.innerHTML = `<pre>${text.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
+      previewContent.innerHTML = `<pre style="background:#111;padding:10px;border-radius:6px;white-space:pre-wrap;">${text.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
     } else {
       previewContent.innerHTML = `<p style="color:#888;">❌ Không hỗ trợ xem trước loại này.</p>`;
     }
