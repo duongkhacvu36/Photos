@@ -60,11 +60,48 @@ td:first-child {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
+  cursor: help;
 }
 
-/* ✅ Hiển thị tooltip khi hover vào tên đầy đủ */
-td:first-child[title] {
-  cursor: help;
+/* ✅ Tooltip tùy chỉnh khi hover vào tên */
+td:first-child::after {
+  content: attr(data-fullname);
+  position: absolute;
+  left: 0;
+  top: -35px;
+  background: rgba(30, 30, 30, 0.95);
+  color: #b388ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #4a2e91;
+  font-size: 0.85rem;
+  opacity: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(5px);
+  transition: all 0.15s ease;
+  z-index: 100;
+}
+td:first-child:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mũi tên nhỏ của tooltip */
+td:first-child::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #4a2e91 transparent;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+td:first-child:hover::before {
+  opacity: 1;
 }
 
 .empty {
@@ -131,7 +168,7 @@ pre {
     font-size: 1.3rem;
   }
   td:first-child {
-    max-width: 150px; /* ✅ Giới hạn nhỏ hơn trên màn hình điện thoại */
+    max-width: 150px;
   }
 }
 </style>
@@ -187,13 +224,13 @@ function renderList(list) {
   const rows = list.map(f=>{
     if(f.type==='dir'){
       return `<tr>
-        <td title="${f.name}">📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
+        <td data-fullname="${f.name}">📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
         <td>-</td><td>Thư mục</td><td></td>
       </tr>`;
     } else {
       const url = rawUrl(f.path);
       return `<tr>
-        <td title="${f.name}">📄 ${f.name}</td>
+        <td data-fullname="${f.name}">📄 ${f.name}</td>
         <td>${formatBytes(f.size)}</td>
         <td>${f.type}</td>
         <td class="action-buttons">
