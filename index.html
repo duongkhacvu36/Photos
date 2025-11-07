@@ -14,15 +14,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   min-height: 100vh;
   padding: 20px 10px;
 }
-
 .container {
   width: 100%;
   max-width: 900px;
 }
-
 header {
   text-align: center;
   margin-bottom: 16px;
@@ -32,7 +31,6 @@ h1 {
   font-size: 1.6rem;
   margin: 0;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
@@ -59,7 +57,6 @@ td {
   color: #777;
   padding: 20px;
 }
-
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -74,71 +71,29 @@ td {
   text-decoration: none;
   transition: 0.2s;
   text-align: center;
-  flex: 1;
   min-width: 60px;
 }
 .action-btn:hover {
   background: #b388ff;
   color: #111;
 }
-
-/* 🖼️ KHUNG XEM TRƯỚC */
+.toggle-btn.active {
+  background: #b388ff;
+  color: #111;
+}
 #previewBox {
   margin-top: 20px;
+  display: none;
   padding: 16px;
   border-radius: 8px;
   background: #111;
   border: 1px solid #222;
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-  transition: all 0.4s ease;
+  transition: opacity 0.25s ease;
 }
 #previewBox.show {
+  display: block;
   opacity: 1;
-  max-height: 1000px;
 }
-#previewHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-#previewHeader h3 {
-  color: #b388ff;
-  margin: 0;
-  font-weight: 600;
-}
-#previewToggle {
-  appearance: none;
-  width: 46px;
-  height: 24px;
-  background: #333;
-  border-radius: 20px;
-  position: relative;
-  cursor: pointer;
-  outline: none;
-  transition: 0.3s;
-}
-#previewToggle::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  background: #ccc;
-  border-radius: 50%;
-  transition: 0.3s;
-}
-#previewToggle:checked {
-  background: #b388ff;
-}
-#previewToggle:checked::before {
-  left: 25px;
-  background: #111;
-}
-
 #previewContent {
   overflow: auto;
   max-height: 400px;
@@ -150,19 +105,6 @@ pre {
   border-radius: 6px;
   white-space: pre-wrap;
 }
-button {
-  background: #b388ff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  margin-top: 10px;
-  cursor: pointer;
-  color: #111;
-}
-button:hover {
-  background: #ce93d8;
-}
-
 @media (max-width: 600px) {
   th, td {
     padding: 8px 6px;
@@ -174,7 +116,6 @@ button:hover {
 }
 </style>
 </head>
-
 <body>
 <header>
   <h1>📂 Danh sách tệp</h1>
@@ -193,27 +134,26 @@ button:hover {
   </table>
 
   <div id="previewBox">
-    <div id="previewHeader">
-      <h3>👁️‍🗨️ <span style="color:#b388ff">Xem trước</span></h3>
-      <input type="checkbox" id="previewToggle" checked>
-    </div>
+    <h3><span style="color:#b388ff;">👁️ Xem trước</span></h3>
     <div id="previewContent"></div>
   </div>
 </main>
 
 <script>
-const filesBody = document.getElementById('filesBody');
-const branch = "main"; // giữ cố định
-
-// 🔍 Tự động nhận owner & repo theo URL GitHub
-function detectRepoInfo() {
-  const match = window.location.href.match(/github\.io\/([^/]+)\/([^/?#]+)/);
-  if (match) {
-    return { owner: match[1], repo: match[2] };
-  }
-  return { owner: "duongkhacvu36", repo: "Share" }; // fallback
+// 🧠 Tự động lấy owner và repo hiện tại
+function getRepoInfo() {
+  const host = window.location.hostname;
+  const path = window.location.pathname.split("/").filter(Boolean);
+  let owner = host.split(".")[0];
+  let repo = path[0] || "";
+  return { owner, repo };
 }
-const { owner, repo } = detectRepoInfo();
+
+const { owner, repo } = getRepoInfo();
+const branch = "main";
+const filesBody = document.getElementById("filesBody");
+const previewBox = document.getElementById("previewBox");
+const previewContent = document.getElementById("previewContent");
 
 async function apiList(path='') {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
@@ -221,17 +161,8 @@ async function apiList(path='') {
   if (!r.ok) throw new Error(`GitHub API lỗi ${r.status}`);
   return r.json();
 }
-
-function rawUrl(path){
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
-}
-
-function formatBytes(b){
-  if(!b) return '-';
-  const k=1024, s=['B','KB','MB','GB'];
-  const i=Math.floor(Math.log(b)/Math.log(k));
-  return (b/Math.pow(k,i)).toFixed(2)+' '+s[i];
-}
+function rawUrl(path){ return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`; }
+function formatBytes(b){ if(!b) return '-'; const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; }
 
 function renderList(list) {
   const rows = list.map(f=>{
@@ -248,7 +179,7 @@ function renderList(list) {
         <td>${f.type}</td>
         <td class="action-buttons">
           <a href="${url}" download class="action-btn">Tải</a>
-          <a href="#" class="action-btn" onclick="previewFile('${url}','${f.name}')">Xem</a>
+          <button class="action-btn toggle-btn" onclick="togglePreview(this,'${url}','${f.name}')">Xem</button>
         </td>
       </tr>`;
     }
@@ -270,53 +201,45 @@ async function loadFiles(path='') {
   }
 }
 
-let currentPreview = { url: null, name: null };
-
-async function previewFile(url,name){
-  const box=document.getElementById('previewBox');
-  const content=document.getElementById('previewContent');
-  const toggle=document.getElementById('previewToggle');
-
-  if (box.classList.contains('show') && currentPreview.url===url) {
+let currentBtn = null;
+async function togglePreview(btn,url,name){
+  // Nếu cùng nút đang bật → tắt
+  if (btn === currentBtn) {
     closePreview();
     return;
   }
+  // Tắt nút cũ
+  if (currentBtn) currentBtn.classList.remove('active');
+  currentBtn = btn;
+  btn.classList.add('active');
+  await previewFile(url,name);
+}
 
-  currentPreview = { url, name };
-  box.classList.add('show');
-  toggle.checked = true;
-  content.innerHTML='<i>Đang tải...</i>';
-
+async function previewFile(url,name){
+  previewBox.style.display='block';
+  previewContent.innerHTML='<i>Đang tải...</i>';
   const ext = name.toLowerCase();
   try {
     if(ext.endsWith('.jpg')||ext.endsWith('.jpeg')||ext.endsWith('.png')||ext.endsWith('.gif')){
-      content.innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;">`;
+      previewContent.innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;">`;
     } else if(ext.endsWith('.pdf')){
-      content.innerHTML=`<iframe src="${url}" width="100%" height="400px" style="border:none;"></iframe>`;
+      previewContent.innerHTML=`<iframe src="${url}" width="100%" height="400px" style="border:none;"></iframe>`;
     } else if(ext.endsWith('.txt')||ext.endsWith('.md')||ext.endsWith('.html')){
       const text=await (await fetch(url)).text();
-      content.innerHTML=`<pre>${text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
+      previewContent.innerHTML=`<pre>${text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
     } else {
-      content.innerHTML=`<p>❌ Không hỗ trợ xem trước loại này.</p>`;
+      previewContent.innerHTML=`<p>❌ Không hỗ trợ xem trước loại này.</p>`;
     }
   } catch(e){
-    content.innerHTML=`<p>Lỗi: ${e.message}</p>`;
+    previewContent.innerHTML=`<p>Lỗi: ${e.message}</p>`;
   }
 }
 
 function closePreview(){
-  const box=document.getElementById('previewBox');
-  const toggle=document.getElementById('previewToggle');
-  box.classList.remove('show');
-  toggle.checked = false;
-  currentPreview = { url: null, name: null };
+  previewBox.style.display='none';
+  if (currentBtn) currentBtn.classList.remove('active');
+  currentBtn = null;
 }
-
-document.getElementById('previewToggle').addEventListener('change', e=>{
-  const box=document.getElementById('previewBox');
-  if(e.target.checked) box.classList.add('show');
-  else closePreview();
-});
 
 loadFiles();
 </script>
