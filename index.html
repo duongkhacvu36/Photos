@@ -18,12 +18,10 @@ body {
   min-height: 100vh;
   padding: 20px 10px;
 }
-
 .container {
   width: 100%;
   max-width: 900px;
 }
-
 header {
   text-align: center;
   margin-bottom: 16px;
@@ -33,40 +31,36 @@ h1 {
   font-size: 1.6rem;
   margin: 0;
 }
-
-/* Bảng file */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
   font-size: 0.95rem;
-  table-layout: fixed;
 }
 th, td {
-  padding: 12px 10px;
+  padding: 12px 8px;
   border-bottom: 1px solid #222;
-  text-align: left;
-  vertical-align: middle;
 }
 th {
   background: #191919;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #b388ff;
+  text-align: left;
 }
 td {
   color: #ddd;
   word-break: break-word;
 }
-tr:last-child td {
-  border-bottom: none;
+.empty {
+  text-align: center;
+  color: #777;
+  padding: 20px;
 }
-
-/* Nút hành động */
 .action-buttons {
   display: flex;
   gap: 8px;
-  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 .action-btn {
   display: inline-block;
@@ -83,30 +77,34 @@ tr:last-child td {
   background: #b388ff;
   color: #111;
 }
-
-/* Khung xem */
+.toggle-btn.active {
+  background: #b388ff;
+  color: #111;
+}
 #previewBox {
+  margin-top: 20px;
   display: none;
-  margin-top: 16px;
-  width: 100%;
+  padding: 16px;
+  border-radius: 8px;
+  background: #111;
+  border: 1px solid #222;
+  transition: opacity 0.25s ease;
+}
+#previewBox.show {
+  display: block;
+  opacity: 1;
 }
 #previewContent {
-  background: #222;
-  border-radius: 6px;
-  padding: 10px;
   overflow: auto;
-  max-height: 70vh;
+  max-height: 400px;
   color: #ddd;
-  border: 1px solid #333;
 }
-#previewContent img {
-  max-width: 100%;
+pre {
+  background: #1a1a1a;
+  padding: 10px;
   border-radius: 6px;
-  display: block;
-  margin: 0 auto;
+  white-space: pre-wrap;
 }
-
-/* Responsive */
 @media (max-width: 600px) {
   th, td {
     padding: 8px 6px;
@@ -118,7 +116,6 @@ tr:last-child td {
 }
 </style>
 </head>
-
 <body>
 <header>
   <h1>📂 Danh sách tệp</h1>
@@ -128,31 +125,35 @@ tr:last-child td {
   <table>
     <thead>
       <tr>
-        <th style="width:40%">Tên</th>
-        <th style="width:20%">Kích thước</th>
-        <th style="width:20%">Loại</th>
-        <th style="width:20%">Hành động</th>
+        <th>Tên</th><th>Kích thước</th><th>Loại</th><th>Hành động</th>
       </tr>
     </thead>
     <tbody id="filesBody">
-      <tr><td colspan="4" style="text-align:center;color:#777;">Đang tải...</td></tr>
+      <tr><td colspan="4" class="empty">Đang tải...</td></tr>
     </tbody>
   </table>
 
   <div id="previewBox">
+    <h3><span style="color:#b388ff;">👁️ Xem trước</span></h3>
     <div id="previewContent"></div>
   </div>
 </main>
 
 <script>
-const filesBody = document.getElementById('filesBody');
-const previewBox = document.getElementById('previewBox');
-const previewContent = document.getElementById('previewContent');
+// 🧠 Tự động lấy owner và repo hiện tại
+function getRepoInfo() {
+  const host = window.location.hostname;
+  const path = window.location.pathname.split("/").filter(Boolean);
+  let owner = host.split(".")[0];
+  let repo = path[0] || "";
+  return { owner, repo };
+}
 
-const repoPath = window.location.pathname.split('/').filter(Boolean);
-const owner = repoPath[0];
-const repo = repoPath[1];
+const { owner, repo } = getRepoInfo();
 const branch = "main";
+const filesBody = document.getElementById("filesBody");
+const previewBox = document.getElementById("previewBox");
+const previewContent = document.getElementById("previewContent");
 
 async function apiList(path='') {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
@@ -160,17 +161,8 @@ async function apiList(path='') {
   if (!r.ok) throw new Error(`GitHub API lỗi ${r.status}`);
   return r.json();
 }
-
-function rawUrl(path) {
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
-}
-
-function formatBytes(b) {
-  if(!b) return '-';
-  const k=1024, s=['B','KB','MB','GB'];
-  const i=Math.floor(Math.log(b)/Math.log(k));
-  return (b/Math.pow(k,i)).toFixed(2)+' '+s[i];
-}
+function rawUrl(path){ return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`; }
+function formatBytes(b){ if(!b) return '-'; const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; }
 
 function renderList(list) {
   const rows = list.map(f=>{
@@ -187,7 +179,7 @@ function renderList(list) {
         <td>${f.type}</td>
         <td class="action-buttons">
           <a href="${url}" download class="action-btn">Tải</a>
-          <a href="#" class="action-btn" onclick="togglePreview('${url}','${f.name}', this)">Xem</a>
+          <button class="action-btn toggle-btn" onclick="togglePreview(this,'${url}','${f.name}')">Xem</button>
         </td>
       </tr>`;
     }
@@ -200,41 +192,53 @@ function renderList(list) {
 }
 
 async function loadFiles(path='') {
-  filesBody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#777;">Đang tải...</td></tr>';
+  filesBody.innerHTML='<tr><td colspan="4" class="empty">Đang tải...</td></tr>';
   try {
     const data = await apiList(path);
     renderList(Array.isArray(data)?data:[data]);
   } catch(e) {
-    filesBody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:#f55;">Lỗi: ${e.message}</td></tr>`;
+    filesBody.innerHTML=`<tr><td colspan="4" class="empty">Lỗi: ${e.message}</td></tr>`;
   }
 }
 
-let currentPreview = null;
-async function togglePreview(url, name, btn) {
-  if (currentPreview === url && previewBox.style.display === 'block') {
-    previewBox.style.display = 'none';
-    currentPreview = null;
+let currentBtn = null;
+async function togglePreview(btn,url,name){
+  // Nếu cùng nút đang bật → tắt
+  if (btn === currentBtn) {
+    closePreview();
     return;
   }
-  previewBox.style.display = 'block';
-  previewContent.innerHTML = '<i>Đang tải...</i>';
-  currentPreview = url;
+  // Tắt nút cũ
+  if (currentBtn) currentBtn.classList.remove('active');
+  currentBtn = btn;
+  btn.classList.add('active');
+  await previewFile(url,name);
+}
 
+async function previewFile(url,name){
+  previewBox.style.display='block';
+  previewContent.innerHTML='<i>Đang tải...</i>';
   const ext = name.toLowerCase();
   try {
-    if (ext.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-      previewContent.innerHTML = `<img src="${url}" alt="preview">`;
-    } else if (ext.endsWith('.pdf')) {
-      previewContent.innerHTML = `<iframe src="${url}" width="100%" height="600px" style="border:none;"></iframe>`;
-    } else if (ext.endsWith('.html') || ext.endsWith('.txt') || ext.endsWith('.md')) {
-      const text = await (await fetch(url)).text();
-      previewContent.innerHTML = `<pre style="background:#111;padding:10px;border-radius:6px;white-space:pre-wrap;">${text.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
+    if(ext.endsWith('.jpg')||ext.endsWith('.jpeg')||ext.endsWith('.png')||ext.endsWith('.gif')){
+      previewContent.innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;">`;
+    } else if(ext.endsWith('.pdf')){
+      previewContent.innerHTML=`<iframe src="${url}" width="100%" height="400px" style="border:none;"></iframe>`;
+    } else if(ext.endsWith('.txt')||ext.endsWith('.md')||ext.endsWith('.html')){
+      const text=await (await fetch(url)).text();
+      previewContent.innerHTML=`<pre>${text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
     } else {
-      previewContent.innerHTML = `<p style="color:#888;">❌ Không hỗ trợ xem loại này.</p>`;
+      previewContent.innerHTML=`<p>❌ Không hỗ trợ xem trước loại này.</p>`;
     }
-  } catch(e) {
-    previewContent.innerHTML = `<p style="color:#f55;">Lỗi: ${e.message}</p>`;
+  } catch(e){
+    previewContent.innerHTML=`<p>Lỗi: ${e.message}</p>`;
   }
+}
+
+function closePreview(){
+  previewBox.style.display='none';
+  if (currentBtn) currentBtn.classList.remove('active');
+  currentBtn = null;
 }
 
 loadFiles();
