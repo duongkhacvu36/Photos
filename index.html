@@ -39,7 +39,7 @@ table {
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid #333; /* ✅ gạch ngang đồng đều hơn */
+  border-bottom: 1px solid #333;
   vertical-align: middle;
 }
 th {
@@ -53,6 +53,20 @@ td {
   color: #ddd;
   word-break: break-word;
 }
+
+/* ✅ Rút gọn tên file/thư mục bằng "..." khi quá dài */
+td:first-child {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ✅ Hiển thị tooltip khi hover vào tên đầy đủ */
+td:first-child[title] {
+  cursor: help;
+}
+
 .empty {
   text-align: center;
   color: #777;
@@ -64,7 +78,7 @@ td {
   flex-wrap: nowrap;
 }
 .action-btn {
-  flex: 1; /* ✅ 2 nút chia đều khung */
+  flex: 1;
   text-align: center;
   display: inline-block;
   padding: 8px 0;
@@ -73,7 +87,7 @@ td {
   color: #b388ff;
   text-decoration: none;
   transition: 0.2s;
-  min-width: 70px; /* ✅ khung bằng nhau */
+  min-width: 70px;
   border: 1px solid #333;
 }
 .action-btn:hover {
@@ -90,7 +104,7 @@ td {
   padding: 16px;
   border-radius: 8px;
   background: #111;
-  border: 1px solid #333; /* ✅ khung xem cùng tông với bảng */
+  border: 1px solid #333;
   transition: opacity 0.25s ease;
 }
 #previewBox.show {
@@ -115,6 +129,9 @@ pre {
   }
   h1 {
     font-size: 1.3rem;
+  }
+  td:first-child {
+    max-width: 150px; /* ✅ Giới hạn nhỏ hơn trên màn hình điện thoại */
   }
 }
 </style>
@@ -170,13 +187,13 @@ function renderList(list) {
   const rows = list.map(f=>{
     if(f.type==='dir'){
       return `<tr>
-        <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
+        <td title="${f.name}">📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
         <td>-</td><td>Thư mục</td><td></td>
       </tr>`;
     } else {
       const url = rawUrl(f.path);
       return `<tr>
-        <td>📄 ${f.name}</td>
+        <td title="${f.name}">📄 ${f.name}</td>
         <td>${formatBytes(f.size)}</td>
         <td>${f.type}</td>
         <td class="action-buttons">
