@@ -33,13 +33,13 @@ h1 {
 }
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: collapse; /* ✅ giúp dòng kẻ ngang đều */
   margin-top: 10px;
   font-size: 0.95rem;
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid #333; /* ✅ gạch ngang đồng đều hơn */
+  border-bottom: 1px solid rgba(255,255,255,0.1); /* ✅ chỉnh kẻ ngang thẳng, đều */
   vertical-align: middle;
 }
 th {
@@ -64,7 +64,7 @@ td {
   flex-wrap: nowrap;
 }
 .action-btn {
-  flex: 1; /* ✅ 2 nút chia đều khung */
+  flex: 1;
   text-align: center;
   display: inline-block;
   padding: 8px 0;
@@ -73,7 +73,7 @@ td {
   color: #b388ff;
   text-decoration: none;
   transition: 0.2s;
-  min-width: 70px; /* ✅ khung bằng nhau */
+  min-width: 70px;
   border: 1px solid #333;
 }
 .action-btn:hover {
@@ -90,7 +90,7 @@ td {
   padding: 16px;
   border-radius: 8px;
   background: #111;
-  border: 1px solid #333; /* ✅ khung xem cùng tông với bảng */
+  border: 1px solid #333;
   transition: opacity 0.25s ease;
 }
 #previewBox.show {
@@ -176,72 +176,3 @@ function renderList(list) {
     } else {
       const url = rawUrl(f.path);
       return `<tr>
-        <td>📄 ${f.name}</td>
-        <td>${formatBytes(f.size)}</td>
-        <td>${f.type}</td>
-        <td class="action-buttons">
-          <a href="${url}" download class="action-btn">Tải</a>
-          <button class="action-btn toggle-btn" onclick="togglePreview(this,'${url}','${f.name}')">Xem</button>
-        </td>
-      </tr>`;
-    }
-  });
-  filesBody.innerHTML = rows.join('');
-  document.querySelectorAll('.dir').forEach(a=>a.onclick=e=>{
-    e.preventDefault();
-    loadFiles(a.dataset.dir);
-  });
-}
-
-async function loadFiles(path='') {
-  filesBody.innerHTML='<tr><td colspan="4" class="empty">Đang tải...</td></tr>';
-  try {
-    const data = await apiList(path);
-    renderList(Array.isArray(data)?data:[data]);
-  } catch(e) {
-    filesBody.innerHTML=`<tr><td colspan="4" class="empty">Lỗi: ${e.message}</td></tr>`;
-  }
-}
-
-let currentBtn = null;
-async function togglePreview(btn,url,name){
-  if (btn === currentBtn) {
-    closePreview();
-    return;
-  }
-  if (currentBtn) currentBtn.classList.remove('active');
-  currentBtn = btn;
-  btn.classList.add('active');
-  await previewFile(url,name);
-}
-
-async function previewFile(url,name){
-  previewBox.style.display='block';
-  previewContent.innerHTML='<i>Đang tải...</i>';
-  const ext = name.toLowerCase();
-  try {
-    if(ext.endsWith('.jpg')||ext.endsWith('.jpeg')||ext.endsWith('.png')||ext.endsWith('.gif')){
-      previewContent.innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;">`;
-    } else if(ext.endsWith('.pdf')){
-      previewContent.innerHTML=`<iframe src="${url}" width="100%" height="400px" style="border:none;"></iframe>`;
-    } else if(ext.endsWith('.txt')||ext.endsWith('.md')||ext.endsWith('.html')){
-      const text=await (await fetch(url)).text();
-      previewContent.innerHTML=`<pre>${text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
-    } else {
-      previewContent.innerHTML=`<p>❌ Không hỗ trợ xem trước loại này.</p>`;
-    }
-  } catch(e){
-    previewContent.innerHTML=`<p>Lỗi: ${e.message}</p>`;
-  }
-}
-
-function closePreview(){
-  previewBox.style.display='none';
-  if (currentBtn) currentBtn.classList.remove('active');
-  currentBtn = null;
-}
-
-loadFiles();
-</script>
-</body>
-</html>
