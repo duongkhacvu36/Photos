@@ -31,22 +31,16 @@ h1 {
   font-size: 1.6rem;
   margin: 0;
 }
-
-/* ✅ Gộp CSS bảng mới */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
   font-size: 0.95rem;
-  table-layout: fixed; /* ép các cột có cùng chiều rộng, giữ hàng đều */
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid #333; /* ✅ gạch ngang đồng đều hơn */
   vertical-align: middle;
-  white-space: nowrap; /* không cho xuống dòng */
-  overflow: hidden; /* ẩn phần tràn nếu tên quá dài */
-  text-overflow: ellipsis; /* hiện ... nếu chữ dài quá */
 }
 th {
   background: #191919;
@@ -57,6 +51,7 @@ th {
 }
 td {
   color: #ddd;
+  word-break: break-word;
 }
 .empty {
   text-align: center;
@@ -69,7 +64,7 @@ td {
   flex-wrap: nowrap;
 }
 .action-btn {
-  flex: 1;
+  flex: 1; /* ✅ 2 nút chia đều khung */
   text-align: center;
   display: inline-block;
   padding: 8px 0;
@@ -78,7 +73,7 @@ td {
   color: #b388ff;
   text-decoration: none;
   transition: 0.2s;
-  min-width: 70px;
+  min-width: 70px; /* ✅ khung bằng nhau */
   border: 1px solid #333;
 }
 .action-btn:hover {
@@ -95,7 +90,7 @@ td {
   padding: 16px;
   border-radius: 8px;
   background: #111;
-  border: 1px solid #333;
+  border: 1px solid #333; /* ✅ khung xem cùng tông với bảng */
   transition: opacity 0.25s ease;
 }
 #previewBox.show {
@@ -116,4 +111,137 @@ pre {
 @media (max-width: 600px) {
   th, td {
     padding: 8px 6px;
-    font-size:
+    font-size: 0.85rem;
+  }
+  h1 {
+    font-size: 1.3rem;
+  }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>📂 Danh sách tệp</h1>
+</header>
+
+<main class="container">
+  <table>
+    <thead>
+      <tr>
+        <th>Tên</th><th>Kích thước</th><th>Loại</th><th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody id="filesBody">
+      <tr><td colspan="4" class="empty">Đang tải...</td></tr>
+    </tbody>
+  </table>
+
+  <div id="previewBox">
+    <h3><span style="color:#b388ff;">👁️ Xem trước</span></h3>
+    <div id="previewContent"></div>
+  </div>
+</main>
+
+<script>
+function getRepoInfo() {
+  const host = window.location.hostname;
+  const path = window.location.pathname.split("/").filter(Boolean);
+  let owner = host.split(".")[0];
+  let repo = path[0] || "";
+  return { owner, repo };
+}
+const { owner, repo } = getRepoInfo();
+const branch = "main";
+const filesBody = document.getElementById("filesBody");
+const previewBox = document.getElementById("previewBox");
+const previewContent = document.getElementById("previewContent");
+
+async function apiList(path='') {
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`GitHub API lỗi ${r.status}`);
+  return r.json();
+}
+function rawUrl(path){ return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`; }
+function formatBytes(b){ if(!b) return '-'; const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; }
+
+function renderList(list) {
+  const rows = list.map(f=>{
+    if(f.type==='dir'){
+      return `<tr>
+        <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
+        <td>-</td><td>Thư mục</td><td></td>
+      </tr>`;
+    } else {
+      const url = rawUrl(f.path);
+      return `<tr>
+        <td>📄 ${f.name}</td>
+        <td>${formatBytes(f.size)}</td>
+        <td>${f.type}</td>
+        <td class="action-buttons">
+          <a href="${url}" download class="action-btn">Tải</a>
+          <button class="action-btn toggle-btn" onclick="togglePreview(this,'${url}','${f.name}')">Xem</button>
+        </td>
+      </tr>`;
+    }
+  });
+  filesBody.innerHTML = rows.join('');
+  document.querySelectorAll('.dir').forEach(a=>a.onclick=e=>{
+    e.preventDefault();
+    loadFiles(a.dataset.dir);
+  });
+}
+
+async function loadFiles(path='') {
+  filesBody.innerHTML='<tr><td colspan="4" class="empty">Đang tải...</td></tr>';
+  try {
+    const data = await apiList(path);
+    renderList(Array.isArray(data)?data:[data]);
+  } catch(e) {
+    filesBody.innerHTML=`<tr><td colspan="4" class="empty">Lỗi: ${e.message}</td></tr>`;
+  }
+}
+
+let currentBtn = null;
+async function togglePreview(btn,url,name){
+  if (btn === currentBtn) {
+    closePreview();
+    return;
+  }
+  if (currentBtn) currentBtn.classList.remove('active');
+  currentBtn = btn;
+  btn.classList.add('active');
+  await previewFile(url,name);
+}
+
+async function previewFile(url,name){
+  previewBox.style.display='block';
+  previewContent.innerHTML='<i>Đang tải...</i>';
+  const ext = name.toLowerCase();
+  try {
+    if(ext.endsWith('.jpg')||ext.endsWith('.jpeg')||ext.endsWith('.png')||ext.endsWith('.gif')){
+      previewContent.innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;">`;
+    } else if(ext.endsWith('.pdf')){
+      previewContent.innerHTML=`<iframe src="${url}" width="100%" height="400px" style="border:none;"></iframe>`;
+    } else if(ext.endsWith('.txt')||ext.endsWith('.md')||ext.endsWith('.html')){
+      const text=await (await fetch(url)).text();
+      previewContent.innerHTML=`<pre>${text.replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}</pre>`;
+    } else {
+      previewContent.innerHTML=`<p>❌ Không hỗ trợ xem trước loại này.</p>`;
+    }
+  } catch(e){
+    previewContent.innerHTML=`<p>Lỗi: ${e.message}</p>`;
+  }
+}
+
+function closePreview(){
+  previewBox.style.display='none';
+  if (currentBtn) currentBtn.classList.remove('active');
+  currentBtn = null;
+}
+
+loadFiles();
+</script>
+</body>
+</html>
