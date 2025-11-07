@@ -39,7 +39,8 @@ table {
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid #222;
+  border-bottom: 1px solid #333; /* ✅ gạch ngang đồng đều hơn */
+  vertical-align: middle;
 }
 th {
   background: #191919;
@@ -60,18 +61,20 @@ td {
 .action-buttons {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .action-btn {
+  flex: 1; /* ✅ 2 nút chia đều khung */
+  text-align: center;
   display: inline-block;
-  padding: 6px 14px;
+  padding: 8px 0;
   border-radius: 6px;
   background: #222;
   color: #b388ff;
   text-decoration: none;
   transition: 0.2s;
-  text-align: center;
-  min-width: 60px;
+  min-width: 70px; /* ✅ khung bằng nhau */
+  border: 1px solid #333;
 }
 .action-btn:hover {
   background: #b388ff;
@@ -87,7 +90,7 @@ td {
   padding: 16px;
   border-radius: 8px;
   background: #111;
-  border: 1px solid #222;
+  border: 1px solid #333; /* ✅ khung xem cùng tông với bảng */
   transition: opacity 0.25s ease;
 }
 #previewBox.show {
@@ -116,6 +119,7 @@ pre {
 }
 </style>
 </head>
+
 <body>
 <header>
   <h1>📂 Danh sách tệp</h1>
@@ -140,7 +144,6 @@ pre {
 </main>
 
 <script>
-// 🧠 Tự động lấy owner và repo hiện tại
 function getRepoInfo() {
   const host = window.location.hostname;
   const path = window.location.pathname.split("/").filter(Boolean);
@@ -148,7 +151,6 @@ function getRepoInfo() {
   let repo = path[0] || "";
   return { owner, repo };
 }
-
 const { owner, repo } = getRepoInfo();
 const branch = "main";
 const filesBody = document.getElementById("filesBody");
@@ -203,12 +205,10 @@ async function loadFiles(path='') {
 
 let currentBtn = null;
 async function togglePreview(btn,url,name){
-  // Nếu cùng nút đang bật → tắt
   if (btn === currentBtn) {
     closePreview();
     return;
   }
-  // Tắt nút cũ
   if (currentBtn) currentBtn.classList.remove('active');
   currentBtn = btn;
   btn.classList.add('active');
