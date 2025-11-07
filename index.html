@@ -39,7 +39,7 @@ table {
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #333; /* ✅ gạch ngang đồng đều hơn */
   vertical-align: middle;
 }
 th {
@@ -53,57 +53,6 @@ td {
   color: #ddd;
   word-break: break-word;
 }
-
-/* ✅ Rút gọn tên file/thư mục bằng "..." khi quá dài */
-td:first-child {
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  position: relative;
-  cursor: help;
-}
-
-/* ✅ Tooltip tùy chỉnh khi hover vào tên */
-td:first-child::after {
-  content: attr(data-fullname);
-  position: absolute;
-  left: 0;
-  top: -35px;
-  background: rgba(30, 30, 30, 0.95);
-  color: #b388ff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #4a2e91;
-  font-size: 0.85rem;
-  opacity: 0;
-  white-space: nowrap;
-  pointer-events: none;
-  transform: translateY(5px);
-  transition: all 0.15s ease;
-  z-index: 100;
-}
-td:first-child:hover::after {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Mũi tên nhỏ của tooltip */
-td:first-child::before {
-  content: "";
-  position: absolute;
-  top: -8px;
-  left: 10px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent #4a2e91 transparent;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-td:first-child:hover::before {
-  opacity: 1;
-}
-
 .empty {
   text-align: center;
   color: #777;
@@ -115,7 +64,7 @@ td:first-child:hover::before {
   flex-wrap: nowrap;
 }
 .action-btn {
-  flex: 1;
+  flex: 1; /* ✅ 2 nút chia đều khung */
   text-align: center;
   display: inline-block;
   padding: 8px 0;
@@ -124,7 +73,7 @@ td:first-child:hover::before {
   color: #b388ff;
   text-decoration: none;
   transition: 0.2s;
-  min-width: 70px;
+  min-width: 70px; /* ✅ khung bằng nhau */
   border: 1px solid #333;
 }
 .action-btn:hover {
@@ -141,7 +90,7 @@ td:first-child:hover::before {
   padding: 16px;
   border-radius: 8px;
   background: #111;
-  border: 1px solid #333;
+  border: 1px solid #333; /* ✅ khung xem cùng tông với bảng */
   transition: opacity 0.25s ease;
 }
 #previewBox.show {
@@ -166,9 +115,6 @@ pre {
   }
   h1 {
     font-size: 1.3rem;
-  }
-  td:first-child {
-    max-width: 150px;
   }
 }
 </style>
@@ -224,13 +170,13 @@ function renderList(list) {
   const rows = list.map(f=>{
     if(f.type==='dir'){
       return `<tr>
-        <td data-fullname="${f.name}">📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
+        <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
         <td>-</td><td>Thư mục</td><td></td>
       </tr>`;
     } else {
       const url = rawUrl(f.path);
       return `<tr>
-        <td data-fullname="${f.name}">📄 ${f.name}</td>
+        <td>📄 ${f.name}</td>
         <td>${formatBytes(f.size)}</td>
         <td>${f.type}</td>
         <td class="action-buttons">
@@ -299,3 +245,4 @@ loadFiles();
 </script>
 </body>
 </html>
+ bạn có thể khiến các dòng tên thu gọn lại không, vd: facebook khi hết phần tên sẽ thành faceb...
