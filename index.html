@@ -31,20 +31,22 @@ h1 {
   font-size: 1.6rem;
   margin: 0;
 }
+
+/* ----- BẢNG ----- */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
   font-size: 0.95rem;
-  table-layout: fixed; /* ✅ ép cột đều nhau */
+  table-layout: fixed; /* ép chia cột đều nhau */
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid #333; /* ✅ dòng kẻ ngang đồng đều */
+  border-bottom: 1px solid #333;
   vertical-align: middle;
-  white-space: nowrap; /* ✅ không xuống dòng */
-  overflow: hidden; /* ✅ ẩn phần tràn */
-  text-overflow: ellipsis; /* ✅ hiện ... nếu tên quá dài */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 th {
   background: #191919;
@@ -56,13 +58,12 @@ th {
 td {
   color: #ddd;
 }
-.empty {
-  text-align: center;
-  color: #777;
-  padding: 20px;
-}
+
+/* ----- CỘT HÀNH ĐỘNG ----- */
 .action-buttons {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 8px;
   flex-wrap: nowrap;
 }
@@ -78,6 +79,7 @@ td {
   transition: 0.2s;
   min-width: 70px;
   border: 1px solid #333;
+  font-size: 0.9rem;
 }
 .action-btn:hover {
   background: #b388ff;
@@ -87,6 +89,8 @@ td {
   background: #b388ff;
   color: #111;
 }
+
+/* ----- KHUNG XEM TRƯỚC ----- */
 #previewBox {
   margin-top: 20px;
   display: none;
@@ -111,10 +115,30 @@ pre {
   border-radius: 6px;
   white-space: pre-wrap;
 }
-@media (max-width: 600px) {
-  th, td {
-    padding: 8px 6px;
+.empty {
+  text-align: center;
+  color: #777;
+  padding: 20px;
+}
+
+/* ----- MOBILE RESPONSIVE ----- */
+@media (max-width: 700px) {
+  table {
     font-size: 0.85rem;
+  }
+  th, td {
+    padding: 10px 6px;
+  }
+  .action-buttons {
+    flex-direction: column; /* ✅ các nút xếp dọc khi màn hình nhỏ */
+    gap: 6px;
+  }
+  .action-btn {
+    width: 100%; /* ✅ mỗi nút full chiều rộng */
+    min-width: unset;
+  }
+  td, th {
+    white-space: nowrap;
   }
   h1 {
     font-size: 1.3rem;
@@ -132,7 +156,10 @@ pre {
   <table>
     <thead>
       <tr>
-        <th>Tên</th><th>Kích thước</th><th>Loại</th><th>Hành động</th>
+        <th style="width:50%">Tên</th>
+        <th style="width:15%">Kích thước</th>
+        <th style="width:15%">Loại</th>
+        <th style="width:20%">Hành động</th>
       </tr>
     </thead>
     <tbody id="filesBody">
@@ -154,7 +181,6 @@ function getRepoInfo() {
   let repo = path[0] || "";
   return { owner, repo };
 }
-
 const { owner, repo } = getRepoInfo();
 const branch = "main";
 const filesBody = document.getElementById("filesBody");
@@ -167,7 +193,6 @@ async function apiList(path='') {
   if (!r.ok) throw new Error(`GitHub API lỗi ${r.status}`);
   return r.json();
 }
-
 function rawUrl(path){ return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`; }
 function formatBytes(b){ if(!b) return '-'; const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; }
 
