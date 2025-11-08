@@ -20,11 +20,10 @@ body {
 
 /* ===== KHUNG CHÍNH ===== */
 .container {
-  width: 94%;
+  width: 95%;
   max-width: 900px;
   margin: 0 auto;
 }
-h1 { display: none; }
 
 /* ===== BẢNG ===== */
 table {
@@ -32,6 +31,7 @@ table {
   border-collapse: collapse;
   font-size: 0.95rem;
   margin-top: 10px;
+  table-layout: fixed;
 }
 th, td {
   padding: 12px 10px;
@@ -39,22 +39,49 @@ th, td {
   vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 td:first-child {
-  width: 55%;
+  width: 48%;
   text-align: left;
 }
 td:nth-child(2) {
-  width: 15%;
+  width: 17%;
   text-align: right;
 }
 td:last-child {
-  width: 30%;
+  width: 35%;
   text-align: right;
-  padding-right: 0;
+  padding-right: 4px;
 }
 td { color: #ddd; }
-thead { display: none; }
+
+/* ===== NÚT ===== */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.action-btn {
+  flex: none;
+  width: 68px;
+  text-align: center;
+  padding: 6px 0;
+  border-radius: 6px;
+  background: #111;
+  color: #b388ff;
+  text-decoration: none;
+  border: 1px solid #222;
+  transition: 0.2s;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+.action-btn:hover {
+  background: #b388ff;
+  color: #000;
+}
 
 /* ===== DÒNG TRỐNG ===== */
 .empty {
@@ -77,38 +104,6 @@ thead { display: none; }
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-/* ===== NÚT HÀNH ĐỘNG ===== */
-.action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  width: 100%;
-  flex-wrap: nowrap;
-}
-.action-btn {
-  flex: 1 1 70px;
-  max-width: 80px;
-  text-align: center;
-  padding: 6px 0;
-  border-radius: 6px;
-  background: #111;
-  color: #b388ff;
-  text-decoration: none;
-  border: 1px solid #222;
-  transition: 0.2s;
-  font-size: 0.9rem;
-  min-width: 60px;
-  box-sizing: border-box;
-}
-.action-btn:hover {
-  background: #b388ff;
-  color: #000;
-}
-.toggle-btn.active {
-  background: #b388ff;
-  color: #000;
 }
 
 /* ===== POPUP XEM TRƯỚC ===== */
@@ -184,10 +179,13 @@ footer span {
 /* ===== MOBILE ===== */
 @media (max-width: 700px) {
   td { padding: 10px 6px; }
-  .action-btn { font-size: 0.85rem; min-width: 50px; max-width: 70px; }
-  td:first-child { width: 50%; }
-  td:nth-child(2) { width: 18%; }
-  td:last-child { width: 32%; }
+  .action-btn {
+    width: 60px;
+    font-size: 0.85rem;
+  }
+  td:first-child { width: 45%; }
+  td:nth-child(2) { width: 20%; }
+  td:last-child { width: 35%; }
 }
 </style>
 </head>
