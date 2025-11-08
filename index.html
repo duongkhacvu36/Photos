@@ -44,8 +44,6 @@ td { color: #ddd; }
   color: #777;
   padding: 20px;
 }
-
-/* ẨN TIÊU ĐỀ CỘT */
 thead { display: none; }
 
 /* ===== PHẦN MỤC ===== */
@@ -60,11 +58,13 @@ thead { display: none; }
   gap: 8px;
 }
 
-/* ===== NÚT HÀNH ĐỘNG BÊN PHẢI ===== */
+/* ===== CỘT NÚT BÊN PHẢI ===== */
+tr td:last-child {
+  text-align: right;
+}
 .action-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
+  display: inline-flex;
+  gap: 6px;
 }
 .action-btn {
   padding: 6px 14px;
@@ -96,26 +96,19 @@ thead { display: none; }
   justify-content: center;
   flex-direction: column;
   z-index: 1000;
+  animation: fadeIn 0.25s ease;
 }
 #previewPopup img, 
+#previewPopup video,
 #previewPopup iframe {
   max-width: 90%;
   max-height: 80%;
   border: 2px solid #555;
   border-radius: 8px;
 }
-#previewPopup button {
-  margin-top: 20px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 5px;
-  background: #b388ff;
-  color: #111;
-  font-weight: 600;
-  cursor: pointer;
-}
-#previewPopup button:hover {
-  background: #fff;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* MOBILE */
@@ -131,9 +124,7 @@ thead { display: none; }
   <!-- Thư mục -->
   <div class="section-title">📁 Thư mục</div>
   <table id="folderTable">
-    <thead>
-      <tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr>
-    </thead>
+    <thead><tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr></thead>
     <tbody id="foldersBody">
       <tr><td colspan="3" class="empty">Không có thư mục</td></tr>
     </tbody>
@@ -142,9 +133,7 @@ thead { display: none; }
   <!-- Tệp -->
   <div class="section-title">📄 Tệp tin</div>
   <table id="filesTable">
-    <thead>
-      <tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr>
-    </thead>
+    <thead><tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr></thead>
     <tbody id="filesBody">
       <tr><td colspan="3" class="empty">Đang tải...</td></tr>
     </tbody>
@@ -154,7 +143,6 @@ thead { display: none; }
 <!-- Popup xem trước -->
 <div id="previewPopup">
   <div id="previewContent"></div>
-  <button onclick="closePreview()">Đóng</button>
 </div>
 
 <script>
@@ -189,7 +177,9 @@ function renderList(list) {
     <tr>
       <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
       <td>-</td>
-      <td class="action-buttons"><button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button></td>
+      <td class="action-buttons">
+        <button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button>
+      </td>
     </tr>`).join('') : `<tr><td colspan="3" class="empty">Không có thư mục</td></tr>`;
 
   filesBody.innerHTML = files.length ? files.map(f => {
@@ -200,7 +190,7 @@ function renderList(list) {
         <td>${formatBytes(f.size)}</td>
         <td class="action-buttons">
           <a href="${url}" download class="action-btn">Tải</a>
-          <button class="action-btn toggle-btn" onclick="previewFile('${url}','${f.name}',this)">Xem</button>
+          <button class="action-btn toggle-btn" onclick="togglePreview(this,'${url}','${f.name}')">Xem</button>
         </td>
       </tr>`;
   }).join('') : `<tr><td colspan="3" class="empty">Không có tệp</td></tr>`;
@@ -221,13 +211,26 @@ async function loadFiles(path='') {
   }
 }
 
-/* ===== POPUP XEM TRƯỚC ===== */
-function previewFile(url,name,btn){
+/* ===== XEM / TẮT POPUP ===== */
+let currentButton = null;
+function togglePreview(btn, url, name) {
   const popup = document.getElementById("previewPopup");
   const content = document.getElementById("previewContent");
+
+  // Nếu đang mở cùng nút => đóng lại
+  if (btn === currentButton && popup.style.display === "flex") {
+    popup.style.display = "none";
+    btn.classList.remove("active");
+    content.innerHTML = "";
+    currentButton = null;
+    return;
+  }
+
+  // Nếu có popup khác đang mở => tắt nó
+  if (currentButton) currentButton.classList.remove("active");
+
   const ext = name.split('.').pop().toLowerCase();
   let html = "";
-
   if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
     html = `<img src="${url}" alt="${name}">`;
   } else if (["mp4","webm"].includes(ext)) {
@@ -240,12 +243,18 @@ function previewFile(url,name,btn){
 
   content.innerHTML = html;
   popup.style.display = "flex";
-}
-function closePreview(){
-  const popup = document.getElementById("previewPopup");
-  const content = document.getElementById("previewContent");
-  content.innerHTML = "";
-  popup.style.display = "none";
+  btn.classList.add("active");
+  currentButton = btn;
+
+  // Tắt popup khi click nền đen
+  popup.onclick = e => {
+    if (e.target === popup) {
+      popup.style.display = "none";
+      btn.classList.remove("active");
+      content.innerHTML = "";
+      currentButton = null;
+    }
+  };
 }
 
 loadFiles();
