@@ -21,16 +21,13 @@ body {
   width: 100%;
   max-width: 900px;
 }
-h1 {
-  display: none; /* ✅ Ẩn dòng tiêu đề "Danh sách tệp" */
-}
+h1 { display: none; }
 
 /* ===== BẢNG ===== */
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
-  table-layout: fixed;
   margin-top: 10px;
 }
 th, td {
@@ -41,27 +38,15 @@ th, td {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-th {
-  background: #191919;
-  color: #b388ff;
-  text-transform: uppercase;
-  font-weight: 600;
-  text-align: left;
-}
-td {
-  color: #ddd;
-}
+td { color: #ddd; }
 .empty {
   text-align: center;
   color: #777;
   padding: 20px;
 }
 
-/* ===== ẨN TIÊU ĐỀ CỘT ===== */
-#folderTable thead,
-#filesTable thead {
-  display: none;
-}
+/* ẨN TIÊU ĐỀ CỘT */
+thead { display: none; }
 
 /* ===== PHẦN MỤC ===== */
 .section-title {
@@ -75,18 +60,14 @@ td {
   gap: 8px;
 }
 
-/* ===== NÚT HÀNH ĐỘNG ===== */
+/* ===== NÚT HÀNH ĐỘNG BÊN PHẢI ===== */
 .action-buttons {
   display: flex;
-  justify-content: center;
-  align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
+  justify-content: flex-end;
 }
 .action-btn {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
+  padding: 6px 14px;
   border-radius: 6px;
   background: #222;
   color: #b388ff;
@@ -94,7 +75,6 @@ td {
   border: 1px solid #333;
   transition: 0.2s;
   font-size: 0.9rem;
-  min-width: 70px;
 }
 .action-btn:hover {
   background: #b388ff;
@@ -105,18 +85,43 @@ td {
   color: #111;
 }
 
-/* ===== MOBILE ===== */
+/* ===== POPUP XEM TRƯỚC ===== */
+#previewPopup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 1000;
+}
+#previewPopup img, 
+#previewPopup iframe {
+  max-width: 90%;
+  max-height: 80%;
+  border: 2px solid #555;
+  border-radius: 8px;
+}
+#previewPopup button {
+  margin-top: 20px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background: #b388ff;
+  color: #111;
+  font-weight: 600;
+  cursor: pointer;
+}
+#previewPopup button:hover {
+  background: #fff;
+}
+
+/* MOBILE */
 @media (max-width: 700px) {
-  table { font-size: 0.85rem; }
-  th, td { padding: 10px 6px; }
-  .action-buttons {
-    flex-direction: column;
-    gap: 6px;
-  }
-  .action-btn {
-    width: 100%;
-    min-width: unset;
-  }
+  td { padding: 10px 6px; }
+  .action-btn { padding: 6px 10px; font-size: 0.85rem; }
 }
 </style>
 </head>
@@ -127,11 +132,7 @@ td {
   <div class="section-title">📁 Thư mục</div>
   <table id="folderTable">
     <thead>
-      <tr>
-        <th style="width:65%">Tên</th>
-        <th style="width:20%">Kích thước</th>
-        <th style="width:15%;text-align:center;">Hành động</th>
-      </tr>
+      <tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr>
     </thead>
     <tbody id="foldersBody">
       <tr><td colspan="3" class="empty">Không có thư mục</td></tr>
@@ -142,17 +143,19 @@ td {
   <div class="section-title">📄 Tệp tin</div>
   <table id="filesTable">
     <thead>
-      <tr>
-        <th style="width:65%">Tên</th>
-        <th style="width:20%">Kích thước</th>
-        <th style="width:15%;text-align:center;">Hành động</th>
-      </tr>
+      <tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr>
     </thead>
     <tbody id="filesBody">
       <tr><td colspan="3" class="empty">Đang tải...</td></tr>
     </tbody>
   </table>
 </main>
+
+<!-- Popup xem trước -->
+<div id="previewPopup">
+  <div id="previewContent"></div>
+  <button onclick="closePreview()">Đóng</button>
+</div>
 
 <script>
 function getRepoInfo() {
@@ -182,17 +185,13 @@ function renderList(list) {
   const folders = list.filter(f => f.type === 'dir');
   const files = list.filter(f => f.type !== 'dir');
 
-  // Thư mục
   foldersBody.innerHTML = folders.length ? folders.map(f => `
     <tr>
       <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
       <td>-</td>
-      <td class="action-buttons">
-        <button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button>
-      </td>
+      <td class="action-buttons"><button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button></td>
     </tr>`).join('') : `<tr><td colspan="3" class="empty">Không có thư mục</td></tr>`;
 
-  // Tệp
   filesBody.innerHTML = files.length ? files.map(f => {
     const url = rawUrl(f.path);
     return `
@@ -222,9 +221,31 @@ async function loadFiles(path='') {
   }
 }
 
-async function previewFile(url,name,btn){
-  btn.classList.toggle('active');
-  window.open(url, '_blank');
+/* ===== POPUP XEM TRƯỚC ===== */
+function previewFile(url,name,btn){
+  const popup = document.getElementById("previewPopup");
+  const content = document.getElementById("previewContent");
+  const ext = name.split('.').pop().toLowerCase();
+  let html = "";
+
+  if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+    html = `<img src="${url}" alt="${name}">`;
+  } else if (["mp4","webm"].includes(ext)) {
+    html = `<video src="${url}" controls autoplay></video>`;
+  } else if (["pdf"].includes(ext)) {
+    html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
+  } else {
+    html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
+  }
+
+  content.innerHTML = html;
+  popup.style.display = "flex";
+}
+function closePreview(){
+  const popup = document.getElementById("previewPopup");
+  const content = document.getElementById("previewContent");
+  content.innerHTML = "";
+  popup.style.display = "none";
 }
 
 loadFiles();
