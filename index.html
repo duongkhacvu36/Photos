@@ -17,9 +17,12 @@ body {
   min-height: 100vh;
   padding: 20px 10px 60px;
 }
+
+/* ===== KHUNG CHÍNH ===== */
 .container {
-  width: 100%;
+  width: 92%;
   max-width: 900px;
+  margin: 0 auto;
 }
 h1 { display: none; }
 
@@ -29,19 +32,32 @@ table {
   border-collapse: collapse;
   font-size: 0.95rem;
   margin-top: 10px;
+  table-layout: fixed;
 }
 th, td {
-  padding: 12px 8px;
+  padding: 12px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   vertical-align: middle;
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+td:first-child {
+  width: 60%;
+  text-align: left;
+}
+td:nth-child(2) {
+  width: 15%;
+  text-align: right;
+}
+td:last-child {
+  width: 25%;
+  text-align: right;
+  padding-right: 0;
 }
 td { color: #ddd; }
 thead { display: none; }
 
-/* ===== CĂN GIỮA DÒNG TRỐNG ===== */
+/* ===== DÒNG TRỐNG ===== */
 .empty {
   text-align: center !important;
   vertical-align: middle;
@@ -52,7 +68,7 @@ thead { display: none; }
   display: table-cell;
 }
 
-/* ===== PHẦN MỤC ===== */
+/* ===== TIÊU ĐỀ MỤC ===== */
 .section-title {
   color: #b388ff;
   margin: 20px 0 10px;
@@ -64,13 +80,6 @@ thead { display: none; }
   gap: 8px;
 }
 
-/* ===== CỘT KÍCH THƯỚC & NÚT BÊN PHẢI ===== */
-tr td:nth-child(2),
-tr td:last-child {
-  text-align: right;
-  padding-right: 0;
-}
-
 /* ===== NÚT HÀNH ĐỘNG ===== */
 .action-buttons {
   display: flex;
@@ -78,10 +87,9 @@ tr td:last-child {
   gap: 6px;
   width: 100%;
 }
-
 .action-btn {
-  flex: 1 1 70px;           /* co giãn đều nhau */
-  max-width: 80px;          /* giữ giới hạn */
+  flex: 1 1 70px;
+  max-width: 80px;
   text-align: center;
   padding: 6px 0;
   border-radius: 6px;
@@ -91,7 +99,6 @@ tr td:last-child {
   border: 1px solid #222;
   transition: 0.2s;
   font-size: 0.9rem;
-  box-sizing: border-box;
 }
 .action-btn:hover {
   background: #b388ff;
@@ -118,7 +125,6 @@ tr td:last-child {
   z-index: 1000;
   animation: fadeIn 0.25s ease;
 }
-
 #previewContent {
   display: flex;
   align-items: center;
@@ -131,7 +137,6 @@ tr td:last-child {
   padding: 10px;
   box-sizing: border-box;
 }
-
 #previewContent img,
 #previewContent video,
 #previewContent iframe {
@@ -143,7 +148,6 @@ tr td:last-child {
   border: 2px solid #222;
   border-radius: 8px;
 }
-
 #previewContent pre {
   background: #050505;
   color: #eee;
@@ -155,7 +159,6 @@ tr td:last-child {
   font-size: 0.9rem;
   border: 1px solid #222;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
