@@ -21,9 +21,6 @@ body {
   width: 100%;
   max-width: 900px;
 }
-h1 {
-  display: none; /* ✅ Ẩn dòng tiêu đề "Danh sách tệp" */
-}
 
 /* ===== BẢNG ===== */
 table {
@@ -124,7 +121,7 @@ td {
       <tr>
         <th style="width:65%">Tên</th>
         <th style="width:20%">Kích thước</th>
-        <th style="width:15%;text-align:center;">Hành động</th>
+        <th style="width:15%">Hành động</th>
       </tr>
     </thead>
     <tbody id="foldersBody">
@@ -139,7 +136,7 @@ td {
       <tr>
         <th style="width:65%">Tên</th>
         <th style="width:20%">Kích thước</th>
-        <th style="width:15%;text-align:center;">Hành động</th>
+        <th style="width:15%">Hành động</th>
       </tr>
     </thead>
     <tbody id="filesBody">
@@ -170,7 +167,12 @@ async function apiList(path='') {
 }
 
 function rawUrl(path){ return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`; }
-function formatBytes(b){ if(!b) return '-'; const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; }
+function formatBytes(b){ 
+  if(!b) return '-'; 
+  const k=1024, s=['B','KB','MB','GB']; 
+  const i=Math.floor(Math.log(b)/Math.log(k)); 
+  return (b/Math.pow(k,i)).toFixed(2)+' '+s[i]; 
+}
 
 function renderList(list) {
   const folders = list.filter(f => f.type === 'dir');
