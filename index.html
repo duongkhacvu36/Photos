@@ -41,12 +41,15 @@ th, td {
 td { color: #ddd; }
 thead { display: none; }
 
-/* Căn giữa dòng trống */
+/* ===== CĂN GIỮA DÒNG TRỐNG ===== */
 .empty {
-  text-align: center;
+  text-align: center !important;
+  vertical-align: middle;
   color: #777;
   padding: 20px;
-  height: 50px;
+  height: 60px;
+  width: 100%;
+  display: table-cell;
 }
 
 /* ===== PHẦN MỤC ===== */
@@ -106,22 +109,39 @@ tr td:last-child {
   z-index: 1000;
   animation: fadeIn 0.25s ease;
 }
-#previewPopup img, 
-#previewPopup video,
-#previewPopup iframe {
+#previewContent {
   max-width: 90%;
   max-height: 80%;
+  overflow: auto;
+  border-radius: 8px;
+}
+#previewContent img,
+#previewContent video,
+#previewContent iframe {
+  max-width: 100%;
+  max-height: 100%;
   border: 2px solid #555;
   border-radius: 8px;
   display: block;
   margin: auto;
+}
+#previewContent pre {
+  background: #111;
+  color: #eee;
+  padding: 20px;
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: "Consolas", monospace;
+  font-size: 0.9rem;
+  border: 1px solid #333;
 }
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-/* MOBILE */
+/* ===== MOBILE ===== */
 @media (max-width: 700px) {
   td { padding: 10px 6px; }
   .action-btn { padding: 6px 10px; font-size: 0.85rem; }
@@ -134,7 +154,6 @@ tr td:last-child {
   <!-- Thư mục -->
   <div class="section-title">📁 Thư mục</div>
   <table id="folderTable">
-    <thead><tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr></thead>
     <tbody id="foldersBody">
       <tr><td colspan="3" class="empty">Không có thư mục</td></tr>
     </tbody>
@@ -143,7 +162,6 @@ tr td:last-child {
   <!-- Tệp -->
   <div class="section-title">📄 Tệp tin</div>
   <table id="filesTable">
-    <thead><tr><th>Tên</th><th>Kích thước</th><th>Hành động</th></tr></thead>
     <tbody id="filesBody">
       <tr><td colspan="3" class="empty">Đang tải...</td></tr>
     </tbody>
@@ -221,9 +239,9 @@ async function loadFiles(path='') {
   }
 }
 
-/* ===== NÚT XEM ON/OFF ===== */
+/* ===== NÚT XEM ON/OFF + XEM TRƯỚC ===== */
 let currentButton = null;
-function togglePreview(btn, url, name) {
+async function togglePreview(btn, url, name) {
   const popup = document.getElementById("previewPopup");
   const content = document.getElementById("previewContent");
 
@@ -239,12 +257,16 @@ function togglePreview(btn, url, name) {
 
   const ext = name.split('.').pop().toLowerCase();
   let html = "";
+
   if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
     html = `<img src="${url}" alt="${name}">`;
   } else if (["mp4","webm"].includes(ext)) {
     html = `<video src="${url}" controls autoplay></video>`;
   } else if (["pdf"].includes(ext)) {
     html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
+  } else if (["txt","html","htm","php","js","css","json","md","xml","c","cpp","py","sh","bat","ini"].includes(ext)) {
+    const text = await fetch(url).then(r=>r.text());
+    html = `<pre>${escapeHtml(text)}</pre>`;
   } else {
     html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
   }
@@ -262,6 +284,18 @@ function togglePreview(btn, url, name) {
       currentButton = null;
     }
   };
+}
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, function(m) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    })[m];
+  });
 }
 
 loadFiles();
