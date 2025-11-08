@@ -39,12 +39,15 @@ th, td {
   text-overflow: ellipsis;
 }
 td { color: #ddd; }
+thead { display: none; }
+
+/* Căn giữa dòng trống */
 .empty {
   text-align: center;
   color: #777;
   padding: 20px;
+  height: 50px;
 }
-thead { display: none; }
 
 /* ===== PHẦN MỤC ===== */
 .section-title {
@@ -58,13 +61,15 @@ thead { display: none; }
   gap: 8px;
 }
 
-/* ===== CỘT NÚT BÊN PHẢI ===== */
+/* ===== CỘT KÍCH THƯỚC & NÚT BÊN PHẢI ===== */
+tr td:nth-child(2),
 tr td:last-child {
   text-align: right;
 }
 .action-buttons {
   display: inline-flex;
   gap: 6px;
+  justify-content: flex-end;
 }
 .action-btn {
   padding: 6px 14px;
@@ -88,9 +93,12 @@ tr td:last-child {
 /* ===== POPUP XEM TRƯỚC ===== */
 #previewPopup {
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.9);
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.92);
   display: none;
   align-items: center;
   justify-content: center;
@@ -105,6 +113,8 @@ tr td:last-child {
   max-height: 80%;
   border: 2px solid #555;
   border-radius: 8px;
+  display: block;
+  margin: auto;
 }
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -211,13 +221,12 @@ async function loadFiles(path='') {
   }
 }
 
-/* ===== XEM / TẮT POPUP ===== */
+/* ===== NÚT XEM ON/OFF ===== */
 let currentButton = null;
 function togglePreview(btn, url, name) {
   const popup = document.getElementById("previewPopup");
   const content = document.getElementById("previewContent");
 
-  // Nếu đang mở cùng nút => đóng lại
   if (btn === currentButton && popup.style.display === "flex") {
     popup.style.display = "none";
     btn.classList.remove("active");
@@ -226,7 +235,6 @@ function togglePreview(btn, url, name) {
     return;
   }
 
-  // Nếu có popup khác đang mở => tắt nó
   if (currentButton) currentButton.classList.remove("active");
 
   const ext = name.split('.').pop().toLowerCase();
@@ -246,7 +254,6 @@ function togglePreview(btn, url, name) {
   btn.classList.add("active");
   currentButton = btn;
 
-  // Tắt popup khi click nền đen
   popup.onclick = e => {
     if (e.target === popup) {
       popup.style.display = "none";
