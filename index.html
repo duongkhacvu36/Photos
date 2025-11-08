@@ -20,7 +20,7 @@ body {
 
 /* ===== KHUNG CHÍNH ===== */
 .container {
-  width: 92%;
+  width: 94%;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -32,7 +32,6 @@ table {
   border-collapse: collapse;
   font-size: 0.95rem;
   margin-top: 10px;
-  table-layout: fixed;
 }
 th, td {
   padding: 12px 10px;
@@ -42,7 +41,7 @@ th, td {
   text-overflow: ellipsis;
 }
 td:first-child {
-  width: 60%;
+  width: 55%;
   text-align: left;
 }
 td:nth-child(2) {
@@ -50,7 +49,7 @@ td:nth-child(2) {
   text-align: right;
 }
 td:last-child {
-  width: 25%;
+  width: 30%;
   text-align: right;
   padding-right: 0;
 }
@@ -84,8 +83,9 @@ thead { display: none; }
 .action-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
+  flex-wrap: nowrap;
 }
 .action-btn {
   flex: 1 1 70px;
@@ -99,6 +99,8 @@ thead { display: none; }
   border: 1px solid #222;
   transition: 0.2s;
   font-size: 0.9rem;
+  min-width: 60px;
+  box-sizing: border-box;
 }
 .action-btn:hover {
   background: #b388ff;
@@ -182,36 +184,33 @@ footer span {
 /* ===== MOBILE ===== */
 @media (max-width: 700px) {
   td { padding: 10px 6px; }
-  .action-btn { font-size: 0.85rem; }
+  .action-btn { font-size: 0.85rem; min-width: 50px; max-width: 70px; }
+  td:first-child { width: 50%; }
+  td:nth-child(2) { width: 18%; }
+  td:last-child { width: 32%; }
 }
 </style>
 </head>
 
 <body>
 <main class="container">
-  <!-- Thư mục -->
   <div class="section-title">📁 Thư mục</div>
-  <table id="folderTable">
+  <table>
     <tbody id="foldersBody">
       <tr><td colspan="3" class="empty">Không có thư mục</td></tr>
     </tbody>
   </table>
 
-  <!-- Tệp -->
   <div class="section-title">📄 Tệp tin</div>
-  <table id="filesTable">
+  <table>
     <tbody id="filesBody">
       <tr><td colspan="3" class="empty">Đang tải...</td></tr>
     </tbody>
   </table>
 </main>
 
-<!-- Popup xem trước -->
-<div id="previewPopup">
-  <div id="previewContent"></div>
-</div>
+<div id="previewPopup"><div id="previewContent"></div></div>
 
-<!-- CHÂN TRANG -->
 <footer>
   Cre: <span>Dương Khắc Vũ © 2025</span>
 </footer>
@@ -252,9 +251,7 @@ function renderList(list) {
     <tr>
       <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
       <td>-</td>
-      <td class="action-buttons">
-        <button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button>
-      </td>
+      <td class="action-buttons"><button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button></td>
     </tr>`).join('') : `<tr><td colspan="3" class="empty">Không có thư mục</td></tr>`;
 
   filesBody.innerHTML = files.length ? files.map(f => {
@@ -304,17 +301,12 @@ async function togglePreview(btn, url, name) {
   const ext = name.split('.').pop().toLowerCase();
   let html = "";
 
-  if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
-    html = `<img src="${url}" alt="${name}">`;
-  } else if (["mp4","webm"].includes(ext)) {
-    html = `<video src="${url}" controls autoplay></video>`;
-  } else if (["pdf"].includes(ext)) {
-    html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
-  } else if (["txt","html","htm","php","js","css","json","md","xml","c","cpp","py","sh","bat","ini"].includes(ext)) {
+  if (["jpg","jpeg","png","gif","webp"].includes(ext)) html = `<img src="${url}" alt="${name}">`;
+  else if (["mp4","webm"].includes(ext)) html = `<video src="${url}" controls autoplay></video>`;
+  else if (["pdf"].includes(ext)) html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
+  else {
     const text = await fetch(url).then(r=>r.text());
-    html = `<pre>${escapeHtml(text)}</pre>`;
-  } else {
-    html = `<iframe src="${url}" width="90%" height="80%"></iframe>`;
+    html = `<pre>${text.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}</pre>`;
   }
 
   content.innerHTML = html;
@@ -330,16 +322,6 @@ async function togglePreview(btn, url, name) {
       currentButton = null;
     }
   };
-}
-
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, m => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  }[m]));
 }
 
 loadFiles();
