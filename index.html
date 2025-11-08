@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Danh sách tệp</title>
+<title>Tệp & Thư mục</title>
 
 <style>
 body {
@@ -21,14 +21,8 @@ body {
   width: 100%;
   max-width: 900px;
 }
-header {
-  text-align: center;
-  margin-bottom: 16px;
-}
 h1 {
-  color: #b388ff;
-  font-size: 1.6rem;
-  margin: 0;
+  display: none; /* ✅ Ẩn dòng tiêu đề "Danh sách tệp" */
 }
 
 /* ===== BẢNG ===== */
@@ -41,7 +35,7 @@ table {
 }
 th, td {
   padding: 12px 8px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
   vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
@@ -57,14 +51,22 @@ th {
 td {
   color: #ddd;
 }
+.empty {
+  text-align: center;
+  color: #777;
+  padding: 20px;
+}
 
-/* ===== PHÂN MỤC ===== */
+/* ===== PHẦN MỤC ===== */
 .section-title {
   color: #b388ff;
   margin: 20px 0 10px;
   font-weight: 600;
   border-bottom: 2px solid #333;
   padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* ===== NÚT HÀNH ĐỘNG ===== */
@@ -97,12 +99,6 @@ td {
   color: #111;
 }
 
-.empty {
-  text-align: center;
-  color: #777;
-  padding: 20px;
-}
-
 /* ===== MOBILE ===== */
 @media (max-width: 700px) {
   table { font-size: 0.85rem; }
@@ -115,30 +111,24 @@ td {
     width: 100%;
     min-width: unset;
   }
-  h1 { font-size: 1.3rem; }
 }
 </style>
 </head>
 
 <body>
-<header>
-  <h1>📂 Danh sách tệp</h1>
-</header>
-
 <main class="container">
   <!-- Thư mục -->
   <div class="section-title">📁 Thư mục</div>
   <table id="folderTable">
     <thead>
       <tr>
-        <th style="width:50%">Tên</th>
-        <th style="width:15%">Kích thước</th>
-        <th style="width:15%">Loại</th>
-        <th style="width:20%">Hành động</th>
+        <th style="width:65%">Tên</th>
+        <th style="width:20%">Kích thước</th>
+        <th style="width:15%;text-align:center;">Hành động</th>
       </tr>
     </thead>
     <tbody id="foldersBody">
-      <tr><td colspan="4" class="empty">Không có thư mục</td></tr>
+      <tr><td colspan="3" class="empty">Không có thư mục</td></tr>
     </tbody>
   </table>
 
@@ -147,14 +137,13 @@ td {
   <table id="filesTable">
     <thead>
       <tr>
-        <th style="width:50%">Tên</th>
-        <th style="width:15%">Kích thước</th>
-        <th style="width:15%">Loại</th>
-        <th style="width:20%">Hành động</th>
+        <th style="width:65%">Tên</th>
+        <th style="width:20%">Kích thước</th>
+        <th style="width:15%;text-align:center;">Hành động</th>
       </tr>
     </thead>
     <tbody id="filesBody">
-      <tr><td colspan="4" class="empty">Đang tải...</td></tr>
+      <tr><td colspan="3" class="empty">Đang tải...</td></tr>
     </tbody>
   </table>
 </main>
@@ -187,27 +176,29 @@ function renderList(list) {
   const folders = list.filter(f => f.type === 'dir');
   const files = list.filter(f => f.type !== 'dir');
 
+  // Thư mục
   foldersBody.innerHTML = folders.length ? folders.map(f => `
     <tr>
       <td>📁 <a href="#" data-dir="${f.path}" class="dir">${f.name}</a></td>
       <td>-</td>
-      <td>Thư mục</td>
-      <td></td>
-    </tr>`).join('') : `<tr><td colspan="4" class="empty">Không có thư mục</td></tr>`;
+      <td class="action-buttons">
+        <button class="action-btn" onclick="loadFiles('${f.path}')">Mở</button>
+      </td>
+    </tr>`).join('') : `<tr><td colspan="3" class="empty">Không có thư mục</td></tr>`;
 
+  // Tệp
   filesBody.innerHTML = files.length ? files.map(f => {
     const url = rawUrl(f.path);
     return `
       <tr>
         <td>📄 ${f.name}</td>
         <td>${formatBytes(f.size)}</td>
-        <td>${f.type}</td>
         <td class="action-buttons">
           <a href="${url}" download class="action-btn">Tải</a>
           <button class="action-btn toggle-btn" onclick="previewFile('${url}','${f.name}',this)">Xem</button>
         </td>
       </tr>`;
-  }).join('') : `<tr><td colspan="4" class="empty">Không có tệp</td></tr>`;
+  }).join('') : `<tr><td colspan="3" class="empty">Không có tệp</td></tr>`;
 
   document.querySelectorAll('.dir').forEach(a => a.onclick = e => {
     e.preventDefault();
@@ -216,12 +207,12 @@ function renderList(list) {
 }
 
 async function loadFiles(path='') {
-  filesBody.innerHTML='<tr><td colspan="4" class="empty">Đang tải...</td></tr>';
+  filesBody.innerHTML='<tr><td colspan="3" class="empty">Đang tải...</td></tr>';
   try {
     const data = await apiList(path);
     renderList(Array.isArray(data) ? data : [data]);
   } catch(e) {
-    filesBody.innerHTML=`<tr><td colspan="4" class="empty">Lỗi: ${e.message}</td></tr>`;
+    filesBody.innerHTML=`<tr><td colspan="3" class="empty">Lỗi: ${e.message}</td></tr>`;
   }
 }
 
